@@ -58,58 +58,65 @@ const { clienteId } = Astro.props;
 </div>
 
 <script define:vars={{ clienteId }}>
-  const modal = document.getElementById('modal-nueva-deuda');
-  const btnAbrir = document.getElementById('btn-nueva-deuda');
-  const btnCerrar = document.getElementById('close-deuda-btn');
-  const bgCerrar = document.getElementById('close-deuda-bg');
-  const form = document.getElementById('form-nueva-deuda');
+  // Esta función envuelve todo para que Astro la ejecute en cada navegación
+  document.addEventListener('astro:page-load', () => {
+    const modal = document.getElementById('modal-nueva-deuda');
+    const btnAbrir = document.getElementById('btn-nueva-deuda');
+    const btnCerrar = document.getElementById('close-deuda-btn');
+    const bgCerrar = document.getElementById('close-deuda-bg');
+    const form = document.getElementById('form-nueva-deuda');
+    const API_URL = 'https://cobrodigital.onrender.com';
 
-  // URL de producción de Render
-  const API_URL = 'https://cobrodigital.onrender.com';
+    // Salir si no estamos en la página que tiene estos elementos
+    if (!modal || !btnAbrir) return;
 
-  btnAbrir?.addEventListener('click', () => {
-    modal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-  });
+    const abrir = () => {
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    };
 
-  const cerrar = () => {
-    modal.classList.add('hidden');
-    document.body.style.overflow = 'auto';
-  };
+    const cerrar = () => {
+      modal.classList.add('hidden');
+      document.body.style.overflow = 'auto';
+    };
 
-  [btnCerrar, bgCerrar].forEach(el => el?.addEventListener('click', cerrar));
+    // Asignamos eventos de forma limpia
+    btnAbrir.onclick = abrir;
+    if (btnCerrar) btnCerrar.onclick = cerrar;
+    if (bgCerrar) bgCerrar.onclick = cerrar;
 
-  form?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const data = Object.fromEntries(new FormData(form));
-    
-    try {
-      // Reemplazado localhost por la URL de Render
-      const res = await fetch(`${API_URL}/clientes/${clienteId}/nueva-deuda`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          saldo: Number(data.saldo),
-          interes: Number(data.interes),
-          // Obtenemos los datos actuales del DOM para completar el esquema
-          nombre: document.getElementById('view-nombre')?.innerText || "",
-          barrio: document.getElementById('view-barrio')?.innerText || "",
-          direccion: document.getElementById('view-direccion')?.innerText || "",
-          telefono: document.getElementById('view-telefono')?.innerText || "",
-          cobrador_id: "system" 
-        })
-      });
+    if (form) {
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const data = Object.fromEntries(new FormData(form));
+        
+        try {
+          const res = await fetch(`${API_URL}/clientes/${clienteId}/nueva-deuda`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              saldo: Number(data.saldo),
+              interes: Number(data.interes),
+              // Extraemos los datos del DOM actuales
+              nombre: document.getElementById('view-nombre')?.innerText || "",
+              barrio: document.getElementById('view-barrio')?.innerText || "",
+              direccion: document.getElementById('view-direccion')?.innerText || "",
+              telefono: document.getElementById('view-telefono')?.innerText || "",
+              cobrador_id: "system" 
+            })
+          });
 
-      if (res.ok) {
-        alert("✅ Cliente reactivado correctamente");
-        window.location.reload();
-      } else {
-        const errorData = await res.json();
-        alert("❌ Error: " + (errorData.detail || "No se pudo reactivar la deuda"));
-      }
-    } catch (err) {
-      console.error(err);
-      alert("❌ Error de conexión con el servidor");
+          if (res.ok) {
+            alert("✅ Cliente reactivado correctamente");
+            window.location.reload();
+          } else {
+            const errorData = await res.json();
+            alert("❌ Error: " + (errorData.detail || "No se pudo actualizar"));
+          }
+        } catch (error) {
+          alert("❌ Error de conexión");
+        }
+      };
     }
   });
 </script>

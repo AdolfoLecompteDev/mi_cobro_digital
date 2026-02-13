@@ -119,115 +119,85 @@ const { id } = Astro.params;
   <ModalNuevaDeuda clienteId={id} /> 
 </Layout>
 
-<script define:vars={{ id }}>
+<script>
   import { navigate } from 'astro:transitions/client';
 
-  const API_URL = 'https://cobrodigital.onrender.com';
+  // Usamos astro:page-load para que cargue los datos al entrar a cualquier ID
+  document.addEventListener('astro:page-load', async () => {
+    const API_URL = 'https://cobrodigital.onrender.com';
+    
+    // Obtenemos el ID de la URL de forma segura para Astro
+    const id = window.location.pathname.split('/').pop();
+    const loadingState = document.getElementById('loading-state');
+    const clienteContent = document.getElementById('cliente-content');
 
-  async function loadData() {
-    try {
-      const resClientes = await fetch(`${API_URL}/clientes`);
-      const clientes = await resClientes.json();
-      const cliente = clientes.find(c => c.id == id);
+    if (!id || id === 'dashboard' || !loadingState) return;
 
-      // ✅ CAMBIADO: usar navigate en lugar de window.location.href
-      if (!cliente) {
-        console.log('Cliente no encontrado, redirigiendo...');
-        navigate('/dashboard');
-        return;
+    async function loadData() {
+      try {
+        const response = await fetch(`${API_URL}/clientes`);
+        const clientes = await response.json();
+        
+        // Buscamos el cliente comparando IDs como strings para evitar errores de tipo
+        const cliente = clientes.find(c => String(c.id) === String(id));
+
+        if (!cliente) {
+          console.error("Cliente no encontrado");
+          navigate('/dashboard');
+          return;
+        }
+
+        // Llenar datos básicos
+        document.getElementById('view-nombre').innerText = cliente.nombre;
+        document.getElementById('view-barrio').innerText = cliente.barrio;
+        document.getElementById('view-direccion').innerText = cliente.direccion;
+        document.getElementById('view-telefono').innerText = cliente.telefono;
+        document.getElementById('view-saldo').innerText = `$${cliente.saldo_pendiente.toLocaleString()}`;
+
+        // Lógica del botón Exportar (Corregida para navegadores modernos)
+        const exportBtn = document.getElementById('exportExcelBtn');
+        if (exportBtn) {
+          exportBtn.onclick = () => {
+            const pagos = cliente.historial_pagos || [];
+            let csvContent = "Fecha,Hora,Abono,Saldo Anterior,Saldo Final\n";
+
+            pagos.forEach(p => {
+              const f = new Date(p.fecha);
+              const fila = [
+                f.toLocaleDateString(),
+                f.toLocaleTimeString(),
+                p.monto,
+                p.saldo_anterior,
+                (p.saldo_anterior - p.monto)
+              ].join(",");
+              csvContent += fila + "\n";
+            });
+
+            const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `Reporte_${cliente.nombre.replace(/\s+/g, '_')}.csv`;
+            
+            // Paso crítico: añadir y quitar del DOM
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          };
+        }
+
+        // Mostrar contenido y ocultar skeleton
+        loadingState.classList.add('hidden');
+        clienteContent.classList.remove('hidden');
+
+      } catch (e) {
+        console.error("Error cargando datos:", e);
+        if (loadingState) {
+          loadingState.innerHTML = `<p class="text-red-500 font-bold p-10 text-center">Error al conectar con el servidor. Reintenta en unos segundos.</p>`;
+        }
       }
-
-      const resPagos = await fetch(`${API_URL}/pagos/${id}`);
-      const pagos = await resPagos.json();
-
-      document.getElementById('view-nombre').innerText = cliente.nombre;
-      document.getElementById('view-barrio').innerText = cliente.barrio;
-      document.getElementById('view-telefono').innerText = cliente.telefono || 'Sin registro';
-      document.getElementById('view-direccion').innerText = cliente.direccion || 'Sin dirección';
-      
-      let tasa = cliente.interes || 0;
-      let saldo = cliente.saldo || 0;
-
-      let tasaParaCalculo = tasa > 100 ? 20 : tasa;
-      const capitalOriginal = saldo / (1 + (tasaParaCalculo / 100));
-      const ganancia = saldo - capitalOriginal;
-
-      document.getElementById('view-tasa').innerText = `${tasa}%`;
-      document.getElementById('view-saldo').innerText = Math.round(saldo).toLocaleString('es-CO');
-      document.getElementById('view-utilidad').innerText = `$${Math.round(ganancia).toLocaleString('es-CO')}`;
-
-      const badge = document.getElementById('status-badge');
-      badge.innerText = cliente.activo ? "Cuenta Activa" : "Pagado / Finalizado";
-      badge.className = cliente.activo 
-        ? "px-4 py-2 rounded-xl text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-        : "px-4 py-2 rounded-xl text-[10px] font-black uppercase bg-slate-500/20 text-slate-400 border border-slate-500/30";
-
-      const tbody = document.getElementById('pagos-tbody');
-      if (pagos && pagos.length > 0) {
-        tbody.innerHTML = pagos.map(p => `
-          <tr class="hover:bg-slate-50 transition-colors">
-            <td class="px-10 py-6 text-sm">
-              <div class="flex flex-col">
-                <span class="font-bold">${new Date(p.fecha).toLocaleDateString()}</span>
-                <span class="text-[10px] text-slate-400 font-medium">${new Date(p.fecha).toLocaleTimeString()}</span>
-              </div>
-            </td>
-            <td class="px-10 py-6 text-center text-emerald-600 font-black text-lg">$${p.monto.toLocaleString('es-CO')}</td>
-            <td class="px-10 py-6 text-center text-slate-400 font-medium">$${p.saldo_anterior.toLocaleString('es-CO')}</td>
-            <td class="px-10 py-6 text-right">
-              <span class="bg-blue-50 px-4 py-2 rounded-xl text-blue-700 font-black">
-                $${Math.max(0, p.saldo_anterior - p.monto).toLocaleString('es-CO')}
-              </span>
-            </td>
-          </tr>
-        `).reverse().join(''); 
-      } else {
-        tbody.innerHTML = `<tr><td colspan="4" class="p-20 text-center opacity-30 font-black uppercase text-xs tracking-widest text-slate-400">Sin movimientos registrados</td></tr>`;
-      }
-
-      document.getElementById('exportExcelBtn')?.addEventListener('click', () => {
-          let csvContent = "DATOS DEL CLIENTE\n";
-          csvContent += `Nombre,${cliente.nombre}\n`;
-          csvContent += `Barrio,${cliente.barrio}\n`;
-          csvContent += `Saldo Actual,${cliente.saldo}\n\n`;
-          csvContent += "HISTORIAL DE PAGOS\n";
-          csvContent += "Fecha,Hora,Abono,Saldo Anterior,Saldo Final\n";
-
-          if (pagos && pagos.length > 0) {
-              pagos.forEach(p => {
-                  const f = new Date(p.fecha);
-                  const fila = [
-                      f.toLocaleDateString(),
-                      f.toLocaleTimeString(),
-                      p.monto,
-                      p.saldo_anterior,
-                      (p.saldo_anterior - p.monto)
-                  ].join(",");
-                  csvContent += fila + "\n";
-              });
-          }
-
-          const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.setAttribute("href", url);
-          link.setAttribute("download", `Expediente_${cliente.nombre.replace(/\s+/g, '_')}.csv`);
-          link.click();
-      });
-
-      document.getElementById('loading-state').classList.add('hidden');
-      document.getElementById('cliente-content').classList.remove('hidden');
-
-    } catch (e) {
-      console.error(e);
-      document.getElementById('loading-state').innerHTML = `<p class="text-red-500 font-bold p-10 text-center">Error al conectar con el servidor de Render. Intenta de nuevo en unos segundos.</p>`;
     }
-  }
 
-  loadData();
-
-  // Re-cargar datos después de transiciones de página
-  document.addEventListener('astro:page-load', () => {
     loadData();
   });
 </script>
