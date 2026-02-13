@@ -122,39 +122,44 @@ const { id } = Astro.params;
 <script>
   import { navigate } from 'astro:transitions/client';
 
-  // Usamos astro:page-load para que cargue los datos al entrar a cualquier ID
   document.addEventListener('astro:page-load', async () => {
     const API_URL = 'https://cobrodigital.onrender.com';
     
-    // Obtenemos el ID de la URL de forma segura para Astro
+    // Obtenemos el ID de la URL
     const id = window.location.pathname.split('/').pop();
     const loadingState = document.getElementById('loading-state');
     const clienteContent = document.getElementById('cliente-content');
 
+    // Si no hay ID o no estamos en la página de cliente, no hacemos nada
     if (!id || id === 'dashboard' || !loadingState) return;
 
     async function loadData() {
       try {
         const response = await fetch(`${API_URL}/clientes`);
-        const clientes = await response.json();
+        if (!response.ok) throw new Error("Error en respuesta de servidor");
         
-        // Buscamos el cliente comparando IDs como strings para evitar errores de tipo
+        const clientes = await response.json();
         const cliente = clientes.find(c => String(c.id) === String(id));
 
         if (!cliente) {
-          console.error("Cliente no encontrado");
+          console.error("Cliente no encontrado con ID:", id);
           navigate('/dashboard');
           return;
         }
 
-        // Llenar datos básicos
-        document.getElementById('view-nombre').innerText = cliente.nombre;
-        document.getElementById('view-barrio').innerText = cliente.barrio;
-        document.getElementById('view-direccion').innerText = cliente.direccion;
-        document.getElementById('view-telefono').innerText = cliente.telefono;
-        document.getElementById('view-saldo').innerText = `$${cliente.saldo_pendiente.toLocaleString()}`;
+        // --- ASIGNACIÓN DE DATOS CON "ESCUDOS" PARA EVITAR EL ERROR ---
+        
+        // Texto básico
+        document.getElementById('view-nombre').innerText = cliente.nombre || "Sin Nombre";
+        document.getElementById('view-barrio').innerText = cliente.barrio || "Sin Barrio";
+        document.getElementById('view-direccion').innerText = cliente.direccion || "Sin Dirección";
+        document.getElementById('view-telefono').innerText = cliente.telefono || "Sin Teléfono";
 
-        // Lógica del botón Exportar (Corregida para navegadores modernos)
+        // EL FIX: Si saldo_pendiente no existe, usamos 0. Así .toLocaleString() no falla.
+        const saldoFinal = cliente.saldo_pendiente || 0;
+        document.getElementById('view-saldo').innerText = `$${saldoFinal.toLocaleString()}`;
+
+        // Lógica del botón Exportar
         const exportBtn = document.getElementById('exportExcelBtn');
         if (exportBtn) {
           exportBtn.onclick = () => {
@@ -163,12 +168,13 @@ const { id } = Astro.params;
 
             pagos.forEach(p => {
               const f = new Date(p.fecha);
+              // Aquí también protegemos con (p.monto || 0)
               const fila = [
                 f.toLocaleDateString(),
                 f.toLocaleTimeString(),
-                p.monto,
-                p.saldo_anterior,
-                (p.saldo_anterior - p.monto)
+                p.monto || 0,
+                p.saldo_anterior || 0,
+                ((p.saldo_anterior || 0) - (p.monto || 0))
               ].join(",");
               csvContent += fila + "\n";
             });
@@ -177,23 +183,27 @@ const { id } = Astro.params;
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
-            link.download = `Reporte_${cliente.nombre.replace(/\s+/g, '_')}.csv`;
+            link.download = `Reporte_${(cliente.nombre || 'cliente').replace(/\s+/g, '_')}.csv`;
             
-            // Paso crítico: añadir y quitar del DOM
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
           };
         }
 
-        // Mostrar contenido y ocultar skeleton
+        // Mostrar contenido
         loadingState.classList.add('hidden');
         clienteContent.classList.remove('hidden');
 
       } catch (e) {
         console.error("Error cargando datos:", e);
         if (loadingState) {
-          loadingState.innerHTML = `<p class="text-red-500 font-bold p-10 text-center">Error al conectar con el servidor. Reintenta en unos segundos.</p>`;
+          loadingState.innerHTML = `
+            <div class="p-10 text-center">
+              <p class="text-red-500 font-bold mb-4">Error: No se pudieron cargar los datos.</p>
+              <button onclick="window.location.reload()" class="bg-blue-600 text-white px-4 py-2 rounded-xl">Reintentar</button>
+            </div>
+          `;
         }
       }
     }
