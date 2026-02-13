@@ -20,5 +20,4 @@ Sistema de grado administrativo para la gestión de préstamos, seguimiento de c
 
 #### 1. Clonar el repositorio
 ```bash
-git clone [https://github.com/tu-usuario/cobro-digital.git](https://github.com/tu-usuario/cobro-digital.git)
-cd cobro-digital
+git clone [https://github.com/tu-usuario/mi_cobro_digital.git](https://github.com/tu-usuario/mi_cobro_digital.git)
