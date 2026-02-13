@@ -1,0 +1,225 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { Icon } from 'astro-icon/components';
+---
+
+<Layout title="Ingreso - CobroDigital">
+  <main class="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+    <div class="w-full max-w-md">
+      
+      <div class="text-center mb-10">
+        <div class="inline-flex bg-blue-600 p-4 rounded-[1.5rem] shadow-xl shadow-blue-200 mb-6">
+          <Icon name="lucide:shield-check" class="text-white w-10 h-10" />
+        </div>
+        <h1 class="text-4xl font-black text-slate-900 tracking-tighter">CobroDigital</h1>
+        <p class="text-slate-400 font-bold uppercase text-[10px] tracking-[0.3em] mt-2">Sistema de Gestión de Cartera</p>
+      </div>
+
+      <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+        <form id="login-form" class="space-y-5">
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Usuario</label>
+            <div class="relative">
+              <Icon name="lucide:user" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5" />
+              <input 
+                type="text" 
+                id="username"
+                name="username"
+                required
+                placeholder="Ingresa tu usuario"
+                class="w-full bg-slate-50 border-none rounded-2xl py-4 pl-12 pr-4 text-slate-900 font-bold placeholder:text-slate-300 focus:ring-2 focus:ring-blue-600 transition-all outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Contraseña</label>
+            <div class="relative">
+              <Icon name="lucide:lock" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5" />
+              <input 
+                type="password" 
+                id="password"
+                name="password"
+                required
+                placeholder="••••••••"
+                class="w-full bg-slate-50 border-none rounded-2xl py-4 pl-12 pr-4 text-slate-900 font-bold placeholder:text-slate-300 focus:ring-2 focus:ring-blue-600 transition-all outline-none"
+              />
+            </div>
+          </div>
+
+          <div id="error-msg" class="hidden bg-red-50 text-red-500 text-xs font-bold p-4 rounded-xl border border-red-100 animate-shake">
+            Credenciales incorrectas o error de conexión
+          </div>
+
+          <!-- DEBUG INFO - Para ver qué devuelve el backend -->
+          <div id="debug-info" class="hidden bg-yellow-50 text-yellow-800 text-xs p-4 rounded-xl border border-yellow-200 max-h-40 overflow-auto">
+            <strong>DEBUG - Respuesta del servidor:</strong>
+            <pre id="debug-content" class="mt-2 text-[10px] whitespace-pre-wrap"></pre>
+          </div>
+
+          <button 
+            type="submit" 
+            id="submit-btn"
+            class="w-full bg-slate-900 hover:bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-slate-200 transition-all active:scale-95 flex items-center justify-center gap-3 uppercase text-xs tracking-widest group"
+          >
+            <span id="btn-text">Entrar al Sistema</span>
+            <Icon name="lucide:arrow-right" id="btn-icon" class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </form>
+      </div>
+
+      <div class="mt-8 flex items-center justify-center gap-2">
+        <div id="status-dot" class="w-2 h-2 bg-slate-300 rounded-full animate-pulse"></div>
+        <span id="status-text" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Verificando Servidor...</span>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import { navigate } from 'astro:transitions/client';
+
+  const API_URL = 'https://cobrodigital.onrender.com';
+
+  let isChecking = false;
+
+  function checkExistingSession() {
+    if (isChecking) return;
+    isChecking = true;
+
+    const session = localStorage.getItem('currentUser');
+    
+    if (!session || session === 'undefined' || session === 'null') {
+      isChecking = false;
+      return;
+    }
+
+    try {
+      const user = JSON.parse(session);
+      
+      if (user && user.username) {
+        navigate('/dashboard');
+      } else {
+        localStorage.removeItem('currentUser');
+        isChecking = false;
+      }
+    } catch (e) {
+      console.error('Error al verificar sesión:', e);
+      localStorage.removeItem('currentUser');
+      isChecking = false;
+    }
+  }
+
+  checkExistingSession();
+
+  const form = document.getElementById('login-form') as HTMLFormElement;
+  const errorMsg = document.getElementById('error-msg');
+  const debugInfo = document.getElementById('debug-info');
+  const debugContent = document.getElementById('debug-content');
+  const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!errorMsg || !submitBtn) return;
+
+    errorMsg.classList.add('hidden');
+    debugInfo?.classList.add('hidden');
+    submitBtn.disabled = true;
+    const originalContent = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span class="flex items-center gap-2"><svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Ingresando...</span>';
+
+    const username = (document.getElementById('username') as HTMLInputElement).value;
+    const password = (document.getElementById('password') as HTMLInputElement).value;
+
+    try {
+      console.log('🔄 Enviando login a:', `${API_URL}/login`);
+      
+      const response = await fetch(`${API_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      console.log('📡 Status de respuesta:', response.status);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const user = await response.json();
+      
+      // 🔍 MOSTRAR QUÉ DEVUELVE EL BACKEND
+      console.log('📦 Datos recibidos del backend:', user);
+      console.log('📋 Tipo de datos:', typeof user);
+      console.log('🔑 Claves en el objeto:', Object.keys(user));
+      
+      if (debugContent && debugInfo) {
+        debugContent.textContent = JSON.stringify(user, null, 2);
+        debugInfo.classList.remove('hidden');
+      }
+
+      // Validación más flexible - revisar diferentes posibles estructuras
+      let userData = null;
+
+      // Caso 1: El objeto ya tiene username directamente
+      if (user.username) {
+        userData = user;
+        console.log('✅ Caso 1: Usuario tiene username directo');
+      }
+      // Caso 2: Los datos vienen dentro de una propiedad 'user'
+      else if (user.user && user.user.username) {
+        userData = user.user;
+        console.log('✅ Caso 2: Usuario dentro de user.user');
+      }
+      // Caso 3: Los datos vienen dentro de 'data'
+      else if (user.data && user.data.username) {
+        userData = user.data;
+        console.log('✅ Caso 3: Usuario dentro de user.data');
+      }
+      // Caso 4: Tiene un campo id o _id (bases de datos)
+      else if (user.id || user._id) {
+        userData = {
+          ...user,
+          username: user.username || user.email || user.id || user._id
+        };
+        console.log('✅ Caso 4: Creando username desde id/email');
+      }
+
+      if (!userData) {
+        console.error('❌ No se pudo extraer datos de usuario válidos');
+        console.error('Estructura recibida:', user);
+        throw new Error('Estructura de usuario inválida');
+      }
+
+      console.log('💾 Guardando usuario:', userData);
+      localStorage.setItem('currentUser', JSON.stringify(userData));
+      
+      console.log('🚀 Navegando a dashboard...');
+      navigate('/dashboard');
+
+    } catch (err) {
+      console.error('❌ Error en login:', err);
+      errorMsg.classList.remove('hidden');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalContent;
+      
+      // Mostrar el error en el debug
+      if (debugContent && debugInfo) {
+        debugContent.textContent = `Error: ${err instanceof Error ? err.message : String(err)}`;
+        debugInfo.classList.remove('hidden');
+      }
+    }
+  });
+</script>
+
+<style>
+  .animate-shake {
+    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+  }
+  @keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
+  }
+</style>

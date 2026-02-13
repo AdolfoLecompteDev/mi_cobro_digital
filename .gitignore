@@ -1,0 +1,52 @@
+# --- ASTRO & FRONTEND ---
+node_modules/
+dist/
+.astro/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.vercel/
+# --- FASTAPI & PYTHON ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# --- VARIABLES DE ENTORNO (CRÍTICO) ---
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
+
+# --- BASES DE DATOS & IDEs ---
+*.db
+*.sqlite3
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# --- DOCKER (Opcional por si lo usas luego) ---
+.docker/

@@ -1,0 +1,150 @@
+---
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+  clienteNombre: string;
+  cuotaSugerida: number;
+  clienteId: string;
+}
+
+const { clienteNombre, cuotaSugerida, clienteId } = Astro.props;
+---
+
+<div id="modal-cobro" class="fixed inset-0 z-[100] hidden">
+  <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" id="close-modal-bg"></div>
+  
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-6">
+    <div class="bg-white rounded-[3rem] shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in duration-300">
+      
+      <div class="bg-blue-600 p-8 text-white relative">
+        <button id="close-modal-btn" class="absolute top-6 right-6 hover:rotate-90 transition-transform p-1">
+          <Icon name="lucide:x" class="w-8 h-8" />
+        </button>
+        <div class="flex items-center gap-4">
+          <div class="bg-white/20 p-3 rounded-2xl">
+            <Icon name="lucide:banknote" class="w-8 h-8" />
+          </div>
+          <div>
+            <h3 class="text-2xl font-black tracking-tight leading-none">Registrar Cobro</h3>
+            <p id="modal-cliente-nombre" class="text-blue-100 text-xs mt-2 uppercase font-bold tracking-widest">{clienteNombre}</p>
+          </div>
+        </div>
+      </div>
+
+      <form class="p-10 space-y-8" id="form-cobro">
+        <div class="space-y-3">
+          <div class="flex justify-between items-center px-4">
+            <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Monto Recibido</label>
+            <span class="text-[10px] font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase">Sugerido: ${cuotaSugerida}</span>
+          </div>
+          
+          <div class="relative group">
+            <span class="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-300 group-focus-within:text-blue-600">$</span>
+            <input 
+              type="number" 
+              name="monto" 
+              id="monto-input"
+              value={cuotaSugerida}
+              step="any"
+              class="w-full pl-12 pr-6 py-6 bg-slate-50 border-2 border-transparent rounded-[2rem] text-4xl font-black text-slate-900 outline-none focus:bg-white focus:border-blue-600 transition-all"
+              required
+            />
+          </div>
+          <p class="text-[10px] text-slate-400 text-center font-medium italic">Puedes editar el monto si el cliente paga una cantidad diferente.</p>
+        </div>
+
+        <div id="modal-error" class="hidden text-red-600 text-[10px] font-black uppercase tracking-tighter text-center bg-red-50 p-4 rounded-2xl border border-red-100"></div>
+
+        <button type="submit" id="btn-guardar-pago" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 rounded-[2rem] font-black text-xl flex items-center justify-center gap-4 transition-all active:scale-95 disabled:opacity-50 shadow-xl shadow-blue-100">
+          <Icon name="lucide:check-circle" class="w-7 h-7" />
+          <span id="text-btn">CONFIRMAR PAGO</span>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ clienteId }}>
+  const modal = document.getElementById('modal-cobro');
+  const openBtn = document.getElementById('open-modal-btn');
+  const closeBtn = document.getElementById('close-modal-btn');
+  const closeBg = document.getElementById('close-modal-bg');
+  const formCobro = document.getElementById('form-cobro');
+  const btnGuardar = document.getElementById('btn-guardar-pago');
+  const modalError = document.getElementById('modal-error');
+  const textBtn = document.getElementById('text-btn');
+
+  // --- CONFIGURACIÓN DINÁMICA ---
+  // import.meta.env no siempre está disponible dentro de define:vars de forma directa, 
+  // así que usamos una técnica segura para Astro:
+  const API_URL = 'https://cobrodigital.onrender.com'; 
+  // Nota: Si prefieres mantenerlo flexible, asegúrate de que PUBLIC_API_URL 
+  // esté en tus variables de entorno de Vercel.
+
+  // Abrir modal
+  openBtn?.addEventListener('click', () => {
+    modal?.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  });
+
+  const cerrar = () => {
+    modal?.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+    if (modalError) modalError.classList.add('hidden');
+  };
+
+  closeBtn?.addEventListener('click', cerrar);
+  closeBg?.addEventListener('click', cerrar);
+
+  // Envío al backend
+  formCobro?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(formCobro);
+    const montoEnviado = Number(formData.get('monto'));
+
+    if (montoEnviado <= 0) {
+      if (modalError) {
+        modalError.innerText = "❌ EL MONTO DEBE SER MAYOR A 0";
+        modalError.classList.remove('hidden');
+      }
+      return;
+    }
+
+    btnGuardar.disabled = true;
+    if (textBtn) textBtn.innerText = "PROCESANDO COBRO...";
+
+    try {
+      // CAMBIO AQUÍ: Usamos la URL de Render en lugar de localhost
+      const response = await fetch(`${API_URL}/pagar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cliente_id: Number(clienteId),
+          monto: montoEnviado,
+          comentario: "Abono flexible"
+        })
+      });
+
+      if (response.ok) {
+        btnGuardar.classList.replace('bg-blue-600', 'bg-emerald-500');
+        btnGuardar.classList.add('shadow-emerald-200');
+        if (textBtn) textBtn.innerText = "¡PAGO REGISTRADO!";
+        
+        setTimeout(() => {
+          window.location.reload(); 
+        }, 1000);
+      } else {
+        const errData = await response.json();
+        throw new Error(errData.detail || "Error al registrar pago");
+      }
+    } catch (err) {
+      if (modalError) {
+        modalError.innerText = "❌ " + err.message;
+        modalError.classList.remove('hidden');
+      }
+      btnGuardar.disabled = false;
+      if (textBtn) textBtn.innerText = "REINTENTAR COBRO";
+    }
+  });
+</script>

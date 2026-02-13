@@ -1,0 +1,233 @@
+---
+export const prerender = false;
+import Layout from '../../layouts/Layout.astro';
+import { Icon } from 'astro-icon/components';
+import ModalCobro from '../../components/ModalCobro.astro';
+import ModalNuevaDeuda from '../../components/ModalNuevaDeuda.astro';
+
+const { id } = Astro.params;
+---
+
+<Layout title="Expediente de Cliente - CobroDigital">
+  <div class="max-w-5xl mx-auto px-6 py-12">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+      <a href="/dashboard" class="inline-flex items-center gap-2 text-slate-500 font-black hover:text-blue-600 transition-colors text-sm uppercase tracking-widest">
+        <Icon name="lucide:chevron-left" class="w-5 h-5" /> 
+        Volver al Tablero
+      </a>
+      <div class="flex gap-3">
+        <button id="exportExcelBtn" class="flex items-center gap-2 bg-emerald-600 text-white px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100">
+            <Icon name="lucide:file-spreadsheet" class="w-4 h-4" />
+            Exportar Movimientos
+        </button>
+
+        <button id="btn-nueva-deuda" class="flex items-center gap-2 bg-slate-900 text-white px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-lg shadow-slate-200">
+          <Icon name="lucide:plus-circle" class="w-4 h-4" />
+          Nueva Deuda
+        </button>
+      </div>
+    </div>
+
+    <div id="loading-state" class="flex justify-center py-20">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    </div>
+
+    <div id="cliente-content" class="hidden flex flex-col gap-10">
+      <section class="bg-white rounded-[3rem] shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-slate-900 px-10 py-7 flex justify-between items-center text-white">
+          <div class="flex items-center gap-4">
+            <div class="bg-blue-600 p-3 rounded-2xl">
+              <Icon name="lucide:user" class="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h2 id="view-nombre" class="font-black text-2xl tracking-tight leading-none">---</h2>
+              <p class="text-slate-400 text-xs mt-1 font-bold uppercase tracking-widest">Expediente ID: {id}</p>
+            </div>
+          </div>
+          <div id="status-badge" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest"></div>
+        </div>
+        
+        <div class="p-10 grid grid-cols-1 md:grid-cols-4 gap-8 border-b border-slate-100">
+          <div class="flex flex-col gap-1">
+            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Contacto</span>
+            <span id="view-telefono" class="text-lg font-bold text-blue-600">---</span>
+          </div>
+          <div class="flex flex-col gap-1">
+            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Barrio / Sector</span>
+            <span id="view-barrio" class="text-lg font-bold text-slate-700">---</span>
+          </div>
+          <div class="flex flex-col md:col-span-2 gap-1">
+            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Dirección Detallada</span>
+            <span id="view-direccion" class="text-lg font-medium text-slate-500 italic leading-snug">---</span>
+          </div>
+        </div>
+
+        <div class="bg-blue-50/50 px-10 py-8 flex flex-col md:flex-row justify-between items-center gap-8">
+          <div>
+            <p class="text-blue-900 font-black uppercase text-[10px] tracking-widest mb-1">Saldo Total a Cobrar</p>
+            <div class="flex items-baseline gap-1">
+              <span class="text-blue-600 font-bold text-xl">$</span>
+              <span id="view-saldo" class="text-5xl font-black text-blue-700 tracking-tighter">0</span>
+            </div>
+          </div>
+
+          <div class="flex gap-4">
+            <div class="bg-white px-6 py-4 rounded-3xl border border-blue-100 shadow-sm text-center min-w-[120px]">
+                <p class="text-slate-400 font-black uppercase text-[9px] tracking-widest">Tasa Pactada</p>
+                <p id="view-tasa" class="text-2xl font-black text-slate-800 tracking-tighter">0%</p>
+            </div>
+            <div class="bg-white px-6 py-4 rounded-3xl border border-emerald-100 shadow-sm text-center min-w-[140px]">
+                <p class="text-emerald-400 font-black uppercase text-[9px] tracking-widest">Utilidad Estimada</p>
+                <p id="view-utilidad" class="text-2xl font-black text-emerald-600 tracking-tighter">$0</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-[3rem] shadow-sm border border-slate-200 overflow-hidden">
+        <div class="px-10 py-8 border-b border-slate-100 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <Icon name="lucide:history" class="w-6 h-6 text-blue-600" />
+            <h3 class="font-black text-slate-900 uppercase text-sm tracking-widest">Historial de Pagos</h3>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="bg-slate-50 text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                <th class="px-10 py-6">Fecha y Hora</th>
+                <th class="px-10 py-6 text-center">Abono</th>
+                <th class="px-10 py-6 text-center">Saldo Anterior</th>
+                <th class="px-10 py-6 text-right">Saldo Final</th>
+              </tr>
+            </thead>
+            <tbody id="pagos-tbody" class="divide-y divide-slate-100 font-bold text-slate-700"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="flex justify-center pb-12">
+        <button id="open-modal-btn" class="group bg-blue-600 hover:bg-blue-700 text-white font-black px-16 py-6 rounded-[2.5rem] shadow-2xl shadow-blue-200 flex items-center gap-4 transition-all active:scale-95 text-xl uppercase tracking-widest">
+          <Icon name="lucide:circle-dollar-sign" class="w-8 h-8 group-hover:rotate-12 transition-transform" />
+          Registrar Cobro
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <ModalCobro clienteId={id} clienteNombre="Cargando..." cuotaSugerida={0} />
+  <ModalNuevaDeuda clienteId={id} /> 
+</Layout>
+
+<script define:vars={{ id }}>
+  import { navigate } from 'astro:transitions/client';
+
+  const API_URL = 'https://cobrodigital.onrender.com';
+
+  async function loadData() {
+    try {
+      const resClientes = await fetch(`${API_URL}/clientes`);
+      const clientes = await resClientes.json();
+      const cliente = clientes.find(c => c.id == id);
+
+      // ✅ CAMBIADO: usar navigate en lugar de window.location.href
+      if (!cliente) {
+        console.log('Cliente no encontrado, redirigiendo...');
+        navigate('/dashboard');
+        return;
+      }
+
+      const resPagos = await fetch(`${API_URL}/pagos/${id}`);
+      const pagos = await resPagos.json();
+
+      document.getElementById('view-nombre').innerText = cliente.nombre;
+      document.getElementById('view-barrio').innerText = cliente.barrio;
+      document.getElementById('view-telefono').innerText = cliente.telefono || 'Sin registro';
+      document.getElementById('view-direccion').innerText = cliente.direccion || 'Sin dirección';
+      
+      let tasa = cliente.interes || 0;
+      let saldo = cliente.saldo || 0;
+
+      let tasaParaCalculo = tasa > 100 ? 20 : tasa;
+      const capitalOriginal = saldo / (1 + (tasaParaCalculo / 100));
+      const ganancia = saldo - capitalOriginal;
+
+      document.getElementById('view-tasa').innerText = `${tasa}%`;
+      document.getElementById('view-saldo').innerText = Math.round(saldo).toLocaleString('es-CO');
+      document.getElementById('view-utilidad').innerText = `$${Math.round(ganancia).toLocaleString('es-CO')}`;
+
+      const badge = document.getElementById('status-badge');
+      badge.innerText = cliente.activo ? "Cuenta Activa" : "Pagado / Finalizado";
+      badge.className = cliente.activo 
+        ? "px-4 py-2 rounded-xl text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+        : "px-4 py-2 rounded-xl text-[10px] font-black uppercase bg-slate-500/20 text-slate-400 border border-slate-500/30";
+
+      const tbody = document.getElementById('pagos-tbody');
+      if (pagos && pagos.length > 0) {
+        tbody.innerHTML = pagos.map(p => `
+          <tr class="hover:bg-slate-50 transition-colors">
+            <td class="px-10 py-6 text-sm">
+              <div class="flex flex-col">
+                <span class="font-bold">${new Date(p.fecha).toLocaleDateString()}</span>
+                <span class="text-[10px] text-slate-400 font-medium">${new Date(p.fecha).toLocaleTimeString()}</span>
+              </div>
+            </td>
+            <td class="px-10 py-6 text-center text-emerald-600 font-black text-lg">$${p.monto.toLocaleString('es-CO')}</td>
+            <td class="px-10 py-6 text-center text-slate-400 font-medium">$${p.saldo_anterior.toLocaleString('es-CO')}</td>
+            <td class="px-10 py-6 text-right">
+              <span class="bg-blue-50 px-4 py-2 rounded-xl text-blue-700 font-black">
+                $${Math.max(0, p.saldo_anterior - p.monto).toLocaleString('es-CO')}
+              </span>
+            </td>
+          </tr>
+        `).reverse().join(''); 
+      } else {
+        tbody.innerHTML = `<tr><td colspan="4" class="p-20 text-center opacity-30 font-black uppercase text-xs tracking-widest text-slate-400">Sin movimientos registrados</td></tr>`;
+      }
+
+      document.getElementById('exportExcelBtn')?.addEventListener('click', () => {
+          let csvContent = "DATOS DEL CLIENTE\n";
+          csvContent += `Nombre,${cliente.nombre}\n`;
+          csvContent += `Barrio,${cliente.barrio}\n`;
+          csvContent += `Saldo Actual,${cliente.saldo}\n\n`;
+          csvContent += "HISTORIAL DE PAGOS\n";
+          csvContent += "Fecha,Hora,Abono,Saldo Anterior,Saldo Final\n";
+
+          if (pagos && pagos.length > 0) {
+              pagos.forEach(p => {
+                  const f = new Date(p.fecha);
+                  const fila = [
+                      f.toLocaleDateString(),
+                      f.toLocaleTimeString(),
+                      p.monto,
+                      p.saldo_anterior,
+                      (p.saldo_anterior - p.monto)
+                  ].join(",");
+                  csvContent += fila + "\n";
+              });
+          }
+
+          const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.setAttribute("href", url);
+          link.setAttribute("download", `Expediente_${cliente.nombre.replace(/\s+/g, '_')}.csv`);
+          link.click();
+      });
+
+      document.getElementById('loading-state').classList.add('hidden');
+      document.getElementById('cliente-content').classList.remove('hidden');
+
+    } catch (e) {
+      console.error(e);
+      document.getElementById('loading-state').innerHTML = `<p class="text-red-500 font-bold p-10 text-center">Error al conectar con el servidor de Render. Intenta de nuevo en unos segundos.</p>`;
+    }
+  }
+
+  loadData();
+
+  // Re-cargar datos después de transiciones de página
+  document.addEventListener('astro:page-load', () => {
+    loadData();
+  });
+</script>

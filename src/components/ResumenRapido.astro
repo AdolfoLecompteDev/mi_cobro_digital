@@ -1,0 +1,101 @@
+---
+import { Icon } from 'astro-icon/components';
+---
+
+<div id="stats-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+  {[1, 2, 3, 4].map(() => (
+    <div class="bg-white p-6 rounded-[2.2rem] border border-slate-100 shadow-sm animate-pulse flex items-center gap-5">
+      <div class="bg-slate-50 w-12 h-12 rounded-xl"></div>
+      <div class="space-y-2">
+        <div class="h-2 w-16 bg-slate-50 rounded"></div>
+        <div class="h-4 w-20 bg-slate-50 rounded"></div>
+      </div>
+    </div>
+  ))}
+</div>
+
+<script>
+  // Definimos la función globalmente para que el Dashboard pueda llamarla si quiere
+  // o se ejecute sola de forma segura.
+  async function loadGlobalStats() {
+    const API_URL = 'https://cobrodigital.onrender.com';
+    const container = document.getElementById('stats-container');
+    
+    // Verificación de seguridad: Si no hay usuario, no hacemos nada.
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    if (!user.role || user.role !== 'admin') {
+      if(container) container.innerHTML = ''; // Limpiar si no es admin
+      return;
+    }
+
+    try {
+      // Agregamos un pequeño delay de 500ms para que no choque con la carga principal del Dashboard
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const [resClientes, resCobradores] = await Promise.all([
+        fetch(`${API_URL}/clientes`),
+        fetch(`${API_URL}/cobradores`)
+      ]);
+
+      if (!resClientes.ok || !resCobradores.ok) return;
+
+      const clientes = await resClientes.json();
+      const cobradores = await resCobradores.json();
+
+      const totalCartera = clientes.reduce((acc, c) => acc + (Number(c.saldo) || 0), 0);
+      const gananciaEstimada = clientes.reduce((acc, c) => acc + (Number(c.interes_pactado) || 0), 0);
+
+      const stats = [
+        { 
+          label: "Cartera en Calle", 
+          value: `$${totalCartera.toLocaleString()}`, 
+          color: "text-blue-600", 
+          bg: "bg-blue-50",
+          path: "M19 7h-1V6a3 3 0 0 0-3-3H5a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1h1a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Zm-3 11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v12Zm4-3h-4V9h4v6Z"
+        },
+        { 
+          label: "Ganancia Proyectada", 
+          value: `$${gananciaEstimada.toLocaleString()}`, 
+          color: "text-emerald-600", 
+          bg: "bg-emerald-50",
+          path: "M22 12h-4l-3 9L9 3l-3 9H2"
+        },
+        { 
+          label: "Equipo Activo", 
+          value: cobradores.length.toString(), 
+          color: "text-indigo-600", 
+          bg: "bg-indigo-50",
+          path: "M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-4Z"
+        },
+        { 
+          label: "Total Clientes", 
+          value: clientes.length.toString(), 
+          color: "text-slate-700", 
+          bg: "bg-slate-100",
+          path: "M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2 M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"
+        },
+      ];
+
+      if (container) {
+        container.innerHTML = stats.map(stat => `
+          <div class="bg-white p-6 rounded-[2.2rem] border border-slate-100 shadow-sm flex items-center gap-5">
+            <div class="${stat.bg} ${stat.color} w-14 h-14 rounded-2xl flex items-center justify-center shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="${stat.path}"/>
+              </svg>
+            </div>
+            <div class="overflow-hidden">
+              <p class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-0.5 truncate">${stat.label}</p>
+              <p class="text-xl font-black text-slate-900 tracking-tighter truncate">${stat.value}</p>
+            </div>
+          </div>
+        `).join('');
+      }
+    } catch (error) {
+      console.error("Fallo silencioso en stats:", error);
+    }
+  }
+
+  // Ejecutar solo si el DOM está listo
+  document.addEventListener('DOMContentLoaded', loadGlobalStats);
+</script>

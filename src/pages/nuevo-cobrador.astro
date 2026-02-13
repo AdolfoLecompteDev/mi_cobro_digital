@@ -1,0 +1,187 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { Icon } from 'astro-icon/components';
+---
+
+<Layout title="Alta de Personal - CobroDigital">
+  <div class="max-w-4xl mx-auto px-6 py-12">
+    
+    <a href="/dashboard" class="group inline-flex items-center gap-2 text-slate-400 font-black mb-10 hover:text-blue-600 transition-all text-[10px] uppercase tracking-[0.2em]">
+      <Icon name="lucide:arrow-left" class="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> 
+      Volver a la Gestión de Equipo
+    </a>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <div class="lg:col-span-2 space-y-8">
+        <header>
+          <h1 class="text-4xl font-black text-slate-900 tracking-tighter">Nuevo Agente</h1>
+          <p class="text-slate-500 font-bold text-sm mt-1 uppercase tracking-widest opacity-60">Configuración de credenciales de cobro</p>
+        </header>
+
+        <form class="space-y-6" id="cobradorForm">
+          <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6">
+            <div class="flex items-center gap-3 border-b border-slate-50 pb-4">
+              <div class="bg-blue-50 text-blue-600 p-2 rounded-lg">
+                <Icon name="lucide:contact" class="w-5 h-5" />
+              </div>
+              <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest">Información Pública</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Nombre y Apellido</label>
+                <input type="text" name="nombre" id="in-nombre" placeholder="Ej. Carlos Ruiz" required class="w-full px-6 py-4 bg-slate-50 rounded-2xl font-bold border-2 border-transparent focus:border-blue-600 focus:bg-white outline-none transition-all placeholder:opacity-30" />
+              </div>
+              <div class="space-y-2">
+                <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Zona Geográfica</label>
+                <input type="text" name="zona" id="in-zona" placeholder="Ej. Zona Norte" required class="w-full px-6 py-4 bg-slate-50 rounded-2xl font-bold border-2 border-transparent focus:border-blue-600 focus:bg-white outline-none transition-all placeholder:opacity-30" />
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-slate-900 p-8 rounded-[2.5rem] shadow-xl shadow-slate-200 space-y-6 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-40 h-40 bg-blue-600/10 blur-3xl -mr-10 -mt-10"></div>
+            
+            <div class="flex items-center justify-between border-b border-white/5 pb-4">
+              <div class="flex items-center gap-3">
+                <Icon name="lucide:shield-check" class="text-blue-400 w-5 h-5" />
+                <h2 class="text-xs font-black text-white uppercase tracking-widest">Acceso al Sistema</h2>
+              </div>
+              <button type="button" id="genPass" class="text-[9px] font-black bg-white/5 hover:bg-white/10 text-blue-400 px-3 py-1 rounded-lg border border-white/10 transition-colors uppercase tracking-tighter">Generar Segura</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Username (ID)</label>
+                <input type="text" name="username" id="in-user" placeholder="c.ruiz_24" required class="w-full px-6 py-4 bg-white/5 border-2 border-white/10 rounded-2xl font-bold text-white outline-none focus:border-blue-500 transition-all" />
+              </div>
+              <div class="space-y-2">
+                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Password</label>
+                <div class="relative">
+                  <input type="password" name="password" id="in-pass" placeholder="••••••••" required class="w-full px-6 py-4 bg-white/5 border-2 border-white/10 rounded-2xl font-bold text-white outline-none focus:border-blue-500 transition-all" />
+                  <button type="button" id="togglePass" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-colors">
+                    <Icon name="lucide:eye" class="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="feedback" class="hidden p-5 rounded-2xl font-black text-xs text-center uppercase tracking-widest"></div>
+
+          <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 rounded-[2rem] font-black text-xl shadow-xl shadow-blue-100 transition-all active:scale-95 flex items-center justify-center gap-4 group">
+            <span id="btnText">CREAR AGENTE DE COBRO</span>
+            <Icon name="lucide:user-check" class="w-6 h-6 group-hover:rotate-12 transition-transform" />
+          </button>
+        </form>
+      </div>
+
+      <div class="space-y-6">
+        <div class="sticky top-28">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-4">Vista Previa</h3>
+            <div class="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden border-b-8 border-blue-600 shadow-2xl">
+              <div class="flex justify-between items-start mb-10">
+                <div class="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center border border-white/10">
+                  <Icon name="lucide:user" class="w-7 h-7 text-blue-400" />
+                </div>
+                <div class="text-right">
+                  <p class="text-[8px] font-black uppercase tracking-[0.2em] opacity-40">Ruta Asignada</p>
+                  <p id="pv-zona" class="text-xs font-black text-blue-400 uppercase">Sin Zona</p>
+                </div>
+              </div>
+              <h4 id="pv-nombre" class="text-2xl font-black tracking-tight mb-1">Nombre Agente</h4>
+              <p id="pv-user" class="text-xs font-bold text-slate-500 italic">@usuario</p>
+              
+              <div class="mt-8 pt-6 border-t border-white/5 flex justify-between items-center">
+                <span class="text-[9px] font-black uppercase tracking-widest text-slate-400">Status</span>
+                <span class="flex items-center gap-1.5 text-[9px] font-black text-emerald-400 uppercase">
+                  <div class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></div>
+                  Listo para Cobrar
+                </span>
+              </div>
+            </div>
+
+            <div class="mt-8 p-6 bg-blue-50 rounded-[2rem] border border-blue-100">
+              <p class="text-[11px] font-bold text-blue-700 leading-relaxed italic text-center">
+                "Asegúrate de que el nombre de usuario sea único para evitar conflictos en el registro de recibos."
+              </p>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  // URL de producción de Render
+  const API_URL = 'https://cobrodigital.onrender.com';
+
+  const form = document.getElementById('cobradorForm') as HTMLFormElement;
+  const feedback = document.getElementById('feedback') as HTMLDivElement;
+  const submitBtn = document.getElementById('submitBtn') as HTMLButtonElement;
+
+  const inNombre = document.getElementById('in-nombre') as HTMLInputElement;
+  const inZona = document.getElementById('in-zona') as HTMLInputElement;
+  const inUser = document.getElementById('in-user') as HTMLInputElement;
+  const inPass = document.getElementById('in-pass') as HTMLInputElement;
+
+  const pvNombre = document.getElementById('pv-nombre');
+  const pvZona = document.getElementById('pv-zona');
+  const pvUser = document.getElementById('pv-user');
+
+  const updatePreview = () => {
+    pvNombre.innerText = inNombre.value || "Nombre Agente";
+    pvZona.innerText = inZona.value || "Sin Zona";
+    pvUser.innerText = inUser.value ? `@${inUser.value}` : "@usuario";
+  };
+
+  [inNombre, inZona, inUser].forEach(el => el.addEventListener('input', updatePreview));
+
+  // Generar Password
+  document.getElementById('genPass').onclick = () => {
+    const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%";
+    let pass = "";
+    for(let i=0; i<10; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
+    inPass.type = "text";
+    inPass.value = pass;
+  };
+
+  // Toggle Password View
+  document.getElementById('togglePass').onclick = () => {
+    inPass.type = inPass.type === "password" ? "text" : "password";
+  };
+
+  // Submit
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    feedback.classList.add('hidden');
+
+    const formData = new FormData(form);
+    const payload = { ...Object.fromEntries(formData), role: 'cobrador' };
+
+    try {
+      const response = await fetch(`${API_URL}/cobradores`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        feedback.innerText = "✅ COBRADOR REGISTRADO EXITOSAMENTE";
+        feedback.className = "p-5 rounded-2xl font-black text-xs text-center bg-emerald-500 text-white block shadow-lg shadow-emerald-100";
+        form.reset();
+        updatePreview();
+        setTimeout(() => window.location.href = '/dashboard', 1800);
+      } else {
+        const result = await response.json();
+        throw new Error(result.detail || "Error en el registro. Posible usuario duplicado.");
+      }
+    } catch (err: any) {
+      feedback.innerText = "❌ ERROR: " + err.message;
+      feedback.className = "p-5 rounded-2xl font-black text-xs text-center bg-red-50 text-red-600 block border border-red-100";
+      submitBtn.disabled = false;
+    }
+  });
+</script>

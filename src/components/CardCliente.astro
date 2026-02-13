@@ -1,0 +1,75 @@
+---
+// src/components/CardCliente.astro
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+  id: string;
+  nombre: string;
+  barrio: string;
+  saldoPendiente: number;
+  cuotaDiaria: number;
+  progreso: number;
+  cobradorNombre?: string; // Nuevo: Opcional para mostrar solo en vista Admin
+}
+
+const { id, nombre, barrio, saldoPendiente, cuotaDiaria, progreso, cobradorNombre } = Astro.props;
+
+const progressColor = progreso > 80 ? 'bg-emerald-500' : progreso > 40 ? 'bg-blue-500' : 'bg-amber-500';
+---
+
+<div class="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-200 hover:border-blue-400 hover:shadow-2xl hover:shadow-blue-100/50 transition-all group relative overflow-hidden">
+  
+  <div class="flex justify-between items-start mb-6 relative">
+    <div class="bg-blue-50 text-blue-600 p-4 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+      <Icon name="lucide:user" class="w-7 h-7" />
+    </div>
+    <div class="text-right">
+      <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Cuota Diaria</p>
+      <p class="text-lg font-black text-slate-800">${cuotaDiaria.toLocaleString()}</p>
+    </div>
+  </div>
+
+  {cobradorNombre && (
+    <div class="inline-flex items-center gap-1.5 px-3 py-1 mb-4 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+      <Icon name="lucide:shield-check" class="w-3.5 h-3.5" />
+      <span class="text-[10px] font-black uppercase tracking-tighter">Cobrador: {cobradorNombre}</span>
+    </div>
+  )}
+
+  <div class="mb-8">
+    <h3 class="text-2xl font-black text-slate-800 mb-1 group-hover:text-blue-700 transition-colors">
+      {nombre}
+    </h3>
+    <div class="flex items-center gap-1.5 text-slate-400 font-bold text-sm">
+      <Icon name="lucide:map-pin" class="w-4 h-4 text-blue-400" />
+      <span>{barrio}</span>
+    </div>
+  </div>
+
+  <div class="mb-8 p-5 bg-slate-50 rounded-3xl border border-slate-100">
+    <div class="flex justify-between items-end mb-3">
+      <div>
+        <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest">Saldo Pendiente</p>
+        <p class="text-2xl font-black text-slate-900">${saldoPendiente.toLocaleString()}</p>
+      </div>
+      <span class="text-xs font-black text-slate-500 bg-white px-2 py-1 rounded-lg border border-slate-200">
+        {progreso}%
+      </span>
+    </div>
+    
+    <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden p-0.5">
+      <div 
+        class={`${progressColor} h-full rounded-full transition-all duration-1000`} 
+        style={`width: ${progreso}%`}
+      ></div>
+    </div>
+  </div>
+
+  <a 
+    href={`/cliente/${id}`} 
+    class="flex items-center justify-center gap-3 w-full bg-slate-900 hover:bg-blue-600 text-white font-black py-5 rounded-[1.5rem] transition-all active:scale-95 shadow-lg shadow-slate-200 hover:shadow-blue-200"
+  >
+    <Icon name="lucide:eye" class="w-5 h-5" />
+    VER DETALLES
+  </a>
+</div>

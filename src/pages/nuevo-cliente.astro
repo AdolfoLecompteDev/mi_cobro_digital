@@ -1,0 +1,217 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { Icon } from 'astro-icon/components';
+---
+
+<Layout title="Apertura de Crédito">
+  <div class="max-w-4xl mx-auto px-6 py-12">
+    
+    <a href="/dashboard" class="group inline-flex items-center gap-2 text-slate-400 font-black mb-10 hover:text-blue-600 transition-all text-[10px] uppercase tracking-[0.2em]">
+      <Icon name="lucide:chevron-left" class="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> 
+      Volver al Panel Administrativo
+    </a>
+
+    <div class="bg-white rounded-[3.5rem] shadow-2xl shadow-slate-200 border border-white overflow-hidden">
+      <div class="bg-slate-900 p-12 text-white relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+        <div class="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div class="flex items-center gap-6">
+            <div class="bg-gradient-to-br from-blue-500 to-indigo-600 p-5 rounded-[2rem] shadow-lg shadow-blue-500/20">
+              <Icon name="lucide:user-plus" class="w-10 h-10" />
+            </div>
+            <div>
+              <h1 class="text-4xl font-black tracking-tighter">Apertura de Crédito</h1>
+              <p class="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">Expediente de Cartera Nueva</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <form id="clienteForm" class="p-12 space-y-12">
+        
+        <div class="space-y-8">
+          <div class="flex items-center gap-3">
+            <div class="w-1.5 h-6 bg-blue-600 rounded-full"></div>
+            <h2 class="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Perfil del Deudor</h2>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-3">
+              <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">Nombre Completo</label>
+              <input type="text" name="nombre" required placeholder="Nombre y Apellidos" class="w-full px-8 py-5 bg-slate-50 border-2 border-transparent rounded-2xl font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" />
+            </div>
+
+            <div class="space-y-3">
+              <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">Agente Responsable</label>
+              <select name="cobrador_id" id="cobradorSelect" required class="w-full px-8 py-5 bg-slate-50 border-2 border-transparent rounded-2xl font-bold focus:bg-white focus:border-blue-600 outline-none transition-all appearance-none cursor-pointer">
+                <option value="">Cargando agentes...</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+             <div class="space-y-3">
+              <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">Barrio / Sector</label>
+              <input type="text" name="barrio" required placeholder="Ej: Las Flores" class="w-full px-8 py-5 bg-slate-50 border-2 border-transparent rounded-2xl font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" />
+            </div>
+            <div class="space-y-3 md:col-span-1">
+              <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">Dirección Exacta</label>
+              <input type="text" name="direccion" required placeholder="Calle 00 # 00 - 00" class="w-full px-8 py-5 bg-slate-50 border-2 border-transparent rounded-2xl font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" />
+            </div>
+            <div class="space-y-3">
+              <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-4">Teléfono / WhatsApp</label>
+              <input type="tel" name="telefono" required placeholder="300 000 0000" class="w-full px-8 py-5 bg-slate-50 border-2 border-transparent rounded-2xl font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" />
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-8 bg-slate-50 p-10 rounded-[3rem] border border-slate-100 relative overflow-hidden">
+          <div class="flex items-center gap-3 relative z-10">
+            <div class="w-1.5 h-6 bg-emerald-500 rounded-full"></div>
+            <h2 class="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Estructura del Préstamo</h2>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+            <div class="space-y-3">
+              <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Capital Prestado</label>
+              <div class="relative">
+                <span class="absolute left-6 top-1/2 -translate-y-1/2 font-black text-slate-400">$</span>
+                <input type="number" id="capital" name="capital_prestado" required placeholder="0" class="w-full pl-12 pr-6 py-5 bg-white border-2 border-transparent rounded-2xl font-black text-xl outline-none focus:border-blue-500 transition-all" />
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">% Interés</label>
+              <div class="relative">
+                <span class="absolute right-6 top-1/2 -translate-y-1/2 font-black text-slate-400">%</span>
+                <input type="number" id="porcentaje" name="interes" required value="20" class="w-full px-6 py-5 bg-white border-2 border-transparent rounded-2xl font-black text-xl outline-none focus:border-blue-500 transition-all" />
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <label class="text-[10px] font-black uppercase tracking-widest text-emerald-600 ml-2 font-bold italic">Ganancia (Visual)</label>
+              <div class="relative">
+                <span class="absolute left-6 top-1/2 -translate-y-1/2 font-black text-emerald-600">$</span>
+                <input type="number" id="interes_monto_visual" readonly class="w-full pl-12 pr-6 py-5 bg-emerald-50 border-2 border-emerald-100 rounded-2xl font-black text-xl text-emerald-700 outline-none" />
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-6 border-t border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-8 items-end">
+            <div class="p-6 bg-slate-900 rounded-3xl text-white">
+              <p class="text-[10px] font-black uppercase tracking-widest opacity-50 mb-1">Saldo Total a Cobrar</p>
+              <p id="total_display" class="text-3xl font-black text-blue-400">$ 0</p>
+              <input type="hidden" name="saldo" id="hidden_saldo" />
+            </div>
+
+            <div class="space-y-3">
+              <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Frecuencia de Cobro</label>
+              <select name="frecuencia" class="w-full px-6 py-5 bg-white border-2 border-transparent rounded-2xl font-black text-lg outline-none focus:border-blue-500 transition-all cursor-pointer">
+                <option value="Diario">Cobro Diario</option>
+                <option value="Semanal">Cobro Semanal</option>
+              </select>
+            </div>
+
+            <div class="space-y-3">
+              <label class="text-[10px] font-black uppercase tracking-widest text-blue-600 ml-2">Cuota Sugerida</label>
+              <div class="relative">
+                <span class="absolute left-6 top-1/2 -translate-y-1/2 font-black text-blue-600">$</span>
+                <input type="number" name="cuota_sugerida" required placeholder="0" class="w-full pl-12 pr-6 py-5 bg-white border-2 border-blue-100 rounded-2xl font-black text-xl outline-none focus:border-blue-500 transition-all" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" id="submitBtn" class="w-full bg-slate-900 hover:bg-blue-600 text-white py-8 rounded-[2.5rem] font-black text-xl shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-4 group">
+          <Icon name="lucide:check-circle" class="w-7 h-7 group-hover:scale-110 transition-transform" />
+          CONFIRMAR Y REGISTRAR CRÉDITO
+        </button>
+      </form>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  // URL de producción de Render
+  const API_URL = 'https://cobrodigital.onrender.com';
+
+  const form = document.getElementById('clienteForm') as HTMLFormElement;
+  const capitalIn = document.getElementById('capital') as HTMLInputElement;
+  const porcentajeIn = document.getElementById('porcentaje') as HTMLInputElement;
+  const interesMontoVisual = document.getElementById('interes_monto_visual') as HTMLInputElement;
+  const totalDisplay = document.getElementById('total_display');
+  const hiddenSaldo = document.getElementById('hidden_saldo') as HTMLInputElement;
+  const select = document.getElementById('cobradorSelect') as HTMLSelectElement;
+
+  // Calculadora Dinámica
+  const calcular = () => {
+    const capital = parseFloat(capitalIn.value) || 0;
+    const porcentaje = parseFloat(porcentajeIn.value) || 0;
+    const montoInteres = capital * (porcentaje / 100);
+    const total = capital + montoInteres;
+
+    interesMontoVisual.value = montoInteres.toFixed(0);
+    if(totalDisplay) totalDisplay.innerText = `$ ${total.toLocaleString()}`;
+    hiddenSaldo.value = total.toString();
+  };
+
+  [capitalIn, porcentajeIn].forEach(el => el.addEventListener('input', calcular));
+
+  async function cargarCobradores() {
+    try {
+      // Uso de API_URL
+      const res = await fetch(`${API_URL}/cobradores`);
+      const data = await res.json();
+      select.innerHTML = '<option value="">Seleccionar Agente</option>' + 
+        data.map(c => `<option value="${c.username}">${c.nombre} (${c.zona || 'Global'})</option>`).join('');
+    } catch (e) {
+      select.innerHTML = '<option value="">Error de conexión con el servidor</option>';
+    }
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn') as HTMLButtonElement;
+    btn.disabled = true;
+    
+    const formData = new FormData(form);
+    const payload = Object.fromEntries(formData);
+    
+    const cleanPayload = {
+      nombre: String(payload.nombre),
+      cobrador_id: String(payload.cobrador_id),
+      barrio: String(payload.barrio),
+      direccion: String(payload.direccion),
+      telefono: String(payload.telefono),
+      frecuencia: String(payload.frecuencia),
+      capital_prestado: Number(payload.capital_prestado),
+      interes: Number(payload.interes),
+      saldo: Number(payload.saldo),
+      cuota_sugerida: Number(payload.cuota_sugerida),
+      activo: true
+    };
+
+    try {
+      // Uso de API_URL
+      const res = await fetch(`${API_URL}/clientes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cleanPayload)
+      });
+
+      if (res.ok) {
+        window.location.href = '/dashboard';
+      } else {
+        const errorData = await res.json();
+        console.error("Error del servidor:", errorData);
+        alert("Error al guardar: " + (errorData.detail || "Verifica los datos"));
+        btn.disabled = false;
+      }
+    } catch (err) {
+      btn.disabled = false;
+      alert("Hubo un error de conexión con el servidor de Render. Reintenta en unos segundos.");
+    }
+  });
+
+  cargarCobradores();
+</script>

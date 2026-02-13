@@ -1,0 +1,83 @@
+---
+// src/components/TablaCobros.astro
+import { Icon } from 'astro-icon/components';
+
+interface Pago {
+  fecha: string;
+  monto: number;           // Cambiado de 'abono' a 'monto' para coincidir con el Schema
+  saldo_anterior: number;  // Usamos el nombre exacto del backend
+  interes_porcentaje: number;
+}
+
+const { pagos } = Astro.props;
+---
+
+<div class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/60 border border-slate-200 overflow-hidden">
+  <div class="p-8 border-b border-slate-100 flex items-center justify-between bg-white">
+    <div class="flex items-center gap-3">
+      <div class="bg-blue-600 p-2 rounded-lg">
+        <Icon name="lucide:list-ordered" class="w-5 h-5 text-white" />
+      </div>
+      <h3 class="font-black text-slate-800 uppercase tracking-widest text-sm">Historial de Pagos</h3>
+    </div>
+    <span class="text-[10px] font-black text-slate-400 bg-slate-100 px-3 py-1 rounded-full uppercase">
+      {pagos.length} Movimientos
+    </span>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-slate-50/50 text-[10px] text-slate-400 font-black uppercase tracking-widest">
+          <th class="px-8 py-5">Fecha de Cobro</th>
+          <th class="px-8 py-5">Monto Recibido</th>
+          <th class="px-8 py-5 text-center">Interés Pago</th>
+          <th class="px-8 py-5 text-center">Abono Capital</th>
+          <th class="px-8 py-5 text-right">Saldo Restante</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {pagos.map((pago: any) => {
+          // Lógica: La ganancia es el interés sobre el saldo anterior o sobre el abono (depende de tu modelo)
+          // Aquí aplicamos: Interés = (Monto * Porcentaje)
+          const interesCobrado = pago.monto * (pago.interes_porcentaje / 100);
+          const capitalReducido = pago.monto - interesCobrado;
+          const saldoFinal = pago.saldo_anterior - capitalReducido;
+
+          return (
+            <tr class="group hover:bg-slate-50 transition-all">
+              <td class="px-8 py-6">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                    <Icon name="lucide:calendar" class="w-4 h-4" />
+                  </div>
+                  <span class="text-slate-600 font-bold text-sm">
+                    {new Date(pago.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}
+                  </span>
+                </div>
+              </td>
+              <td class="px-8 py-6">
+                <span class="text-lg font-black text-slate-800">${pago.monto.toLocaleString()}</span>
+              </td>
+              <td class="px-8 py-6 text-center">
+                <span class="font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg text-sm">
+                  + ${interesCobrado.toLocaleString()}
+                </span>
+              </td>
+              <td class="px-8 py-6 text-center">
+                <span class="text-blue-600 font-black text-sm">
+                  ${capitalReducido.toLocaleString()}
+                </span>
+              </td>
+              <td class="px-8 py-6 text-right">
+                <span class="inline-block bg-slate-900 text-white px-4 py-2 rounded-xl font-black text-base shadow-lg shadow-slate-200">
+                  ${saldoFinal.toLocaleString()}
+                </span>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+</div>
